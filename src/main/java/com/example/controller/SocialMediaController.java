@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -88,6 +91,40 @@ public class SocialMediaController {
     public ResponseEntity<List<Message>> getAllMessagesList() {
         List<Message> allMessageList = messageService.getAllMessagesLsit();
         return ResponseEntity.ok(allMessageList);
+    }
+
+    // GET localhost:8080/messages/{messageId}
+    @GetMapping("/messages/{messageId}")
+    public ResponseEntity<Message> getMessageByMessageId(@PathVariable Integer messageId) {
+        Message message = messageService.getMessageByMessageId(messageId);
+        
+        return ResponseEntity.status(HttpStatus.OK).body(message);
+    }
+
+    // DELETE localhost:8080/messages/{messageId}
+    @DeleteMapping("messages/{messageId}")
+    public ResponseEntity<Integer> deleteMessageByMessageId(@PathVariable Integer messageId) {
+        int rowsDeleted = messageService.deleteMessageByMessageId(messageId);
+
+        if(rowsDeleted > 0) {
+            return ResponseEntity.status(HttpStatus.OK).body(rowsDeleted);
+        } else {
+            return ResponseEntity.ok().build();
+        }
+    }
+
+    // PATCH localhost:8080/messages/{messageId}
+    @PatchMapping("messages/{messageId}")
+    public  ResponseEntity<Integer> patchMessageTextByMessageId(@PathVariable Integer messageId, @RequestBody String newMessageText) {
+        // The request body should contain a new messageText values to replace the message identified by messageId
+        int rowsAffected = messageService.patchMessageTextByMessageId(messageId, newMessageText);
+        
+
+        if(rowsAffected > 0) {
+            return ResponseEntity.ok(rowsAffected);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 }

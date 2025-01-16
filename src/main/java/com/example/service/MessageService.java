@@ -5,11 +5,13 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.entity.Message;
 import com.example.repository.MessageRepository;
 
 @Service
+@Transactional
 public class MessageService {
     private MessageRepository messageRepository;
 
@@ -44,4 +46,36 @@ public class MessageService {
     public List<Message> getAllMessagesLsit() {
         return (List<Message>) messageRepository.findAll();
     }
+
+    public Message getMessageByMessageId(Integer messageId) {
+        Optional<Message> messageOptional = messageRepository.findById(messageId);
+
+        if (messageOptional.isPresent()) {
+            Message message = messageOptional.get();
+            return message;
+        }
+        return null;
+    }
+
+    public int deleteMessageByMessageId(Integer messageId) {
+        int rowsDeleted = messageRepository.deleteByMessageIdAndReturnCount(messageId);
+        return rowsDeleted;
+    }
+
+    public int patchMessageTextByMessageId(Integer messageId, String newMessageText) {
+        if(newMessageText == null ||  newMessageText.isBlank() || newMessageText.length() > 255 || newMessageText.isEmpty()) {
+            return 0; 
+        }
+
+        Message existingMessage = getMessageByMessageId(messageId);
+
+        if(existingMessage != null ) {
+            existingMessage.setMessageText(newMessageText);
+            messageRepository.save(existingMessage);
+            return 1;
+        }
+        return 0;
+    }
+
+
 }
