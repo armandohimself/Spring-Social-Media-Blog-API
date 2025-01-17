@@ -7,17 +7,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.entity.Account;
 import com.example.entity.Message;
+import com.example.repository.AccountRepository;
 import com.example.repository.MessageRepository;
 
 @Service
 @Transactional
 public class MessageService {
     private MessageRepository messageRepository;
+    private AccountRepository accountRepository;
 
     @Autowired
-    public MessageService(MessageRepository messageRepository) {
+    public MessageService(MessageRepository messageRepository, AccountRepository accountRepository) {
         this.messageRepository = messageRepository;
+        this.accountRepository = accountRepository;
     }
 
     public Message findMessageByPostedBy(Message message) {
@@ -27,6 +31,15 @@ public class MessageService {
             return messageOptional.get();
         }
         return null;
+    }
+
+    public List<Message> getAllMessagesFromAccountByAccountId(Integer accountId) {
+        // Find the account by accountId
+        if (!accountRepository.existsById(accountId)) {
+            throw new IllegalArgumentException("Account with ID " + accountId + " does not exist.");
+        }
+
+        return messageRepository.findAllMessagesByPostedBy(accountId);
     }
 
     public Message createMessage(Message message) {
@@ -63,7 +76,9 @@ public class MessageService {
     }
 
     public int patchMessageTextByMessageId(Integer messageId, String newMessageText) {
-        if(newMessageText == null ||  newMessageText.isBlank() || newMessageText.length() > 255 || newMessageText.isEmpty()) {
+        System.out.println(newMessageText);
+        if(newMessageText == null ||  newMessageText.isBlank() || newMessageText.length() > 255 || newMessageText.isEmpty() || newMessageText == "") {
+            System.out.println("We're returning 0");
             return 0; 
         }
 

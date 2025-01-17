@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.example.entity.*;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -115,16 +118,40 @@ public class SocialMediaController {
 
     // PATCH localhost:8080/messages/{messageId}
     @PatchMapping("messages/{messageId}")
-    public  ResponseEntity<Integer> patchMessageTextByMessageId(@PathVariable Integer messageId, @RequestBody String newMessageText) {
-        // The request body should contain a new messageText values to replace the message identified by messageId
-        int rowsAffected = messageService.patchMessageTextByMessageId(messageId, newMessageText);
+    public ResponseEntity<Integer> patchMessageTextByMessageId(@PathVariable Integer messageId, @RequestBody String requestMessageText) {
         
-
-        if(rowsAffected > 0) {
-            return ResponseEntity.ok(rowsAffected);
-        } else {
+        try {
+            // Parse the JSON to extract "messageText"
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(requestMessageText);
+            String newMessageText = jsonNode.get("messageText").asText();
+    
+            // Validate messageText (blank or empty strings)
+            if (newMessageText == null || newMessageText.isBlank()) {
+                return ResponseEntity.badRequest().build(); // Return 400 Bad Request
+            }
+    
+            // Process the update
+            int rowsAffected = messageService.patchMessageTextByMessageId(messageId, newMessageText);
+    
+            if (rowsAffected > 0) {
+                return ResponseEntity.ok(rowsAffected); // Successfully updated
+            } else {
+                return ResponseEntity.badRequest().build(); // Message not found or invalid
+            }
+        } catch (Exception e) {
+            // Handle parsing errors or other exceptions
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    // GET localhost:8080/accounts/{accountId}/messages
+    @GetMapping("/accounts/{accountId}/messages")
+    public ResponseEntity<List<Message>> getAllMessagesFromAccountByAccountId(@PathVariable Integer accountId) {
+
+        List<Message> allMessages = messageService.getAllMessagesFromAccountByAccountId(accountId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(allMessages);
     }
 
 }

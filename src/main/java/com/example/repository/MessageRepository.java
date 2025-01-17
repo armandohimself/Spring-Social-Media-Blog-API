@@ -1,5 +1,6 @@
 package com.example.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,8 @@ public interface MessageRepository extends JpaRepository<Message, Integer>{
     @Transactional
     @Query("DELETE FROM Message WHERE messageId = :messageId")
     public int deleteByMessageIdAndReturnCount(@Param("messageId") Integer messageId);
+
+    
+    @Query("SELECT m FROM Message m WHERE m.postedBy = :accountId")
+    public List<Message> findAllMessagesByPostedBy(@Param("accountId") Integer accountId);
 }
